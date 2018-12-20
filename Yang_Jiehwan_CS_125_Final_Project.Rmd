@@ -1,0 +1,240 @@
+## CS 125 FINAL PROJECT
+## Name: Jiehwan Yang
+## Date: May 16 2015
+## Topic: Do Immigrants Take American Jobs Away and Harm the U.S. Economy?
+========================================================
+
+###Introduction:
+At the heart of the debate over immigration lies one key question: are immigrants good or bad for the economy? The American public overwhemingly thinks they're bad. In a recent poll carried out by New York Times and CBS News, 74 percent of respondents said immigrants weakend the economy, compared to only 17 percent who said they strengthened it. As an international student myself, I wanted to investigate and find if the increase in the number of immigrants takes jobs away from native-born workers and therefore harms the U.S. economy as a whole.
+
+
+###Loading required packages
+```{r}
+require(plyr)
+require(animation)
+library(ggplot2)
+library(grid)
+library(plyr)
+```
+
+Firstly, I am obtaining the csv format of each file as follows:
+HistOfImm: Inflow Number of Immigrants to the U.S. from 1820 to 2013
+numOfImm: Inflow Number of Immigrants to the U.S. from 1985 to 2013
+GDP: U.S. GDP per capita from 1985 to 2013
+Employment: Employment-People Ratio from 1985 to 2013
+```{r}
+HistOfImm<- read.csv("C:\\Users\\user\\Desktop\\프로젝트\\CS125\\USImmigrants\\USImmigFlow_1820_2013.csv")
+numOfImm<- read.csv("C:\\Users\\user\\Desktop\\프로젝트\\CS125\\USImmigrants\\USImmigFlow_1985_2013.csv")
+GDP<- read.csv("C:\\Users\\user\\Desktop\\프로젝트\\CS125\\USImmigrants\\GDP_per_capita_1985_2013.csv")
+Employment<- read.csv("C:\\Users\\user\\Desktop\\프로젝트\\CS125\\USImmigrants\\Employment_Population_Ratio_1985_2013.csv")
+```
+Source:
+USImmigFlow_1820_2013.csv= http://www.migrationpolicy.org/programs/data-hub/charts/Annual-Number-of-US-Legal-Permanent-Residents
+GDP_per_capita_1985_2013.csv= https://research.stlouisfed.org/fred2/series/USARGDPC# 
+Employment_Population_Ratio_1985_2013.csv= http://data.bls.gov/pdq/SurveyOutputServlet
+
+
+Now that we have all the data we need in order to observe and testify the effects of the number of immigrants on the employment rate and the U.S. economy as a whole, let's first look at the graph of the Number of Immigrants through animation. Please be patient :)
+
+```{r}
+plot0<- ggplot(data=HistOfImm, aes(x=Year,y=Number)) + geom_line(aes(color=Number)) +geom_point(aes(color=Number)) +xlab("Year") +ylab("Number of Immigrants") +ggtitle("Influx of Immigrants in the US 1820-2013")
+
+library(animation)
+require(animation)
+ani.options(outdir = getwd(), autobrowse= FALSE)
+saveGIF({
+  for (a in c(seq(1820,2013,1))) {
+    PlotDot0<- plot0 + geom_point(aes(x=a,y=as.integer(HistOfImm[HistOfImm[,1]==a,][2])), color="yellow", size=3)
+    print (PlotDot0)
+  }
+}   , interval= 0.1, movie.name= "Immig_1820_2013.gif", ani.width=1200,ani.heigt=600)
+```
+
+With the comprehensive U.S. historical number of the influx of immigrants in mind, let's draw the "Number of New Immigrants", "U.S. GDP per capita", and "Employment-People Ratio" on one page during the same period of time (1985-2013). Please note that I first had to create a function called multiplot in order to draw multiple plots on the same page.
+
+```{r}
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+plot1<-ggplot(data=numOfImm, aes(x=Year,y=Number.of.Legal.Permanent.Residents)) + geom_line() +geom_point() +xlab("Year") +ylab("Number of Immigrants") +ggtitle("Influx of Immigrants in the US 1985-2013")+ geom_rect(aes(xmin=2008, xmax=2009, ymin=580000,ymax=1850000), alpha=0.01)+ geom_text(aes(x = 2008, y = 580000, label = "Financial Crisis"), size = 5)+ geom_text(aes(x=1990, y=580000, label= "Great Transformation"))+ geom_rect(aes(xmin=1988, xmax=1991, ymin=580000, ymax=1850000),alpha=0.01)
+
+plot2<-ggplot(data=GDP, aes(x=Year,y=GDP_per_capita)) + geom_line() +geom_point() +xlab("Year") +ylab("GDP per capita") +ggtitle("GDP per capita in the US 1985-2013") + scale_x_continuous(breaks=seq(1985,2013,5))+ geom_rect(aes(xmin=2008, xmax=2009, ymin=30000,ymax=55000), alpha=0.01)+ geom_text(aes(x = 2008, y = 30000, label = "Financial Crisis"), size = 5)+ geom_text(aes(x=1990, y=30000, label= "Great Transformation"))+ geom_rect(aes(xmin=1988, xmax=1991, ymin=30000, ymax=55000),alpha=0.01)
+
+plot3<-ggplot(data=Employment, aes(x=Year, y= Percentage)) +geom_line() +geom_point() +xlab("Year") +ylab("Employment") +ggtitle("Employment Percentage in the US 1985-2013")+ geom_rect(aes(xmin=2008, xmax=2009, ymin=58,ymax=65), alpha=0.01)+ geom_text(aes(x = 2008, y = 58, label = "Financial Crisis"), size = 5)+ geom_text(aes(x=1989, y=58, label= "Great Transformation"))+ geom_rect(aes(xmin=1988, xmax=1991, ymin=58, ymax=65),alpha=0.01)
+
+multiplot(plot1,plot2,plot3)
+
+```
+
+In order to compare the changes in both the Number of New Immigrants and GDP per capita, let's create an animation of a red dot going through each year on two graphs at the same time. Please note that I needed to use a function called arrange_ggplot2, which I found in the site below.
+
+```{r}
+arrange_ggplot2 <- function(..., nrow=NULL, ncol=NULL, as.table=FALSE) {
+  require(grid)
+  dots <- list(...)
+  n <- length(dots)
+  if(is.null(nrow) & is.null(ncol)) { nrow = floor(n/2) ; ncol = ceiling(n/nrow)}
+  if(is.null(nrow)) { nrow = ceiling(n/ncol)}
+  if(is.null(ncol)) { ncol = ceiling(n/nrow)}
+  ## NOTE see n2mfrow in grDevices for possible alternative
+  grid.newpage()
+  pushViewport(viewport(layout=grid.layout(nrow,ncol) ) )
+  ii.p <- 1
+  for(ii.row in seq(1, nrow)){
+    ii.table.row <- ii.row  
+    if(as.table) {ii.table.row <- nrow - ii.table.row + 1}
+    for(ii.col in seq(1, ncol)){
+      ii.table <- ii.p
+      if(ii.p > n) break
+      print(dots[[ii.table]], vp=viewport(layout.pos.row=ii.table.row, layout.pos.col= ii.col))
+      ii.p <- ii.p + 1
+    }
+  }
+}
+```
+Source: https://github.com/alexsingleton/gd/blob/master/R/arrange_ggplot2.R
+
+Once I had this function, I could use it as looped print for the GIF of the animated graphs.
+
+```{r}
+library(animation)
+require(animation)
+ani.options(outdir = getwd(), autobrowse= FALSE)
+saveGIF({
+  for (a in c(seq(1985,2013,1))) {
+    PlotDot1<- plot1 + geom_point(aes(x=a,y=as.integer(numOfImm[numOfImm[,1]==a,][2])), color="red", size=3)
+    PlotDot2<- plot2 + geom_point(aes(x=a,y=as.integer(GDP[GDP[,1]==a,][2])), color="red", size=3)
+    
+    print (arrange_ggplot2(PlotDot1,PlotDot2))
+  }
+}   , interval= 0.7, movie.name= "All_Two.gif", ani.width=1600,ani.heigt=600)
+```
+
+
+In order to more attentively observe the pattern between the Number of New Immigrants and the Employment Rate, let's create a graph that has two variables as y-axis at the opposite end with the same x-axis(Year).
+
+# Number of New Immigrants vs. Employment Rate
+```{r}
+time <- seq(1985,2013,1)
+numImm<- numOfImm[,2]
+emp<- Employment[,2]
+
+par(mar=c(5,12,4,6) +0.1)
+
+plot(time, numImm, pch=16, axes=FALSE, ylim=c(560000,1910000), xlab="",ylab="",type="b",col="black",main="Number of New Immigrants vs. Employment Rate")
+axis(2, ylim=c(560000,1910000),col="black",las=1)
+mtext("# of New Immigrants",side=2,line=5.5)
+box()
+
+par(new=TRUE)
+
+plot(time,emp, pch=15, xlab="",ylab="",ylim=c(58,65), axes=FALSE,type="b",col="red")
+mtext("Employment Rate",side=4,col="red",line=4)
+axis(4, ylim=c(58,65),col="red",col.axis="red",las=1)
+
+axis(1,pretty(range(time),10))
+mtext("Year",side=1,col="black",line=2.5)
+
+legend("topleft",legend=c("Number of New Immigrants","Employment Rate"), text.col=c("black","red"),pch=c(16,15),col=c("black","red"))
+
+```
+Source: http://stackoverflow.com/questions/6142944/how-can-i-plot-with-2-different-y-axes
+
+
+# Number of New Immigrants vs. GDP per capita
+```{r}
+time <- seq(1985,2013,1)
+numImm<- numOfImm[,2]
+gdp<- GDP[,2]
+
+par(mar=c(5,12,4,6) +0.1)
+
+plot(time, numImm, pch=16, axes=FALSE, ylim=c(560000,1910000), xlab="",ylab="",type="b",col="black",main="# of New Immigrants vs. GDP_per_capita")
+axis(2, ylim=c(560000,1910000),col="black",las=1)
+mtext("Number of New Immigrants",side=2,line=5.5)
+box()
+
+par(new=TRUE)
+
+plot(time,gdp, pch=15, xlab="",ylab="",ylim=c(30000,55000), axes=FALSE,type="b",col="blue")
+mtext("GDP_per_capita",side=4,col="blue",line=4)
+axis(4, ylim=c(30000,55000),col="blue",col.axis="blue",las=1)
+
+axis(1,pretty(range(time),10))
+mtext("Year",side=1,col="black",line=2.5)
+
+legend("topleft",legend=c("Number of New Immigrants","GDP_per_capita"), text.col=c("black","blue"),pch=c(16,15),col=c("black","blue"))
+```
+
+
+Although the simultaneous graphs illustrate the changes in the Employment Rate and GDP per capita along with the changes in the Number of New Immigrants, let's get a more accurate measure of the correlation between the Number of Immigrants and U.S. Employment percentage by performing correlation analysis and regression analysis.
+
+```{r}
+cat ("The correlation coefficient (r) between the Number of Immigrants and Employment Rate from 1985 to 2013 is: ", cor(numOfImm$Num,Employment$Per))
+cat ("The coefficient of determination (r^2) between the Number of Immigrants and Employment Rate from 1985 to 2013 is: ", cor(numOfImm$Num,Employment$Per)^2)
+```
+
+# Regressional Analysis between Number of Immigrants and Employment_Rate
+```{r}
+df1<- data.frame(Number_of_Immigrants= numOfImm[,2], Employment_Rate= Employment[,2])
+with(df1, plot(Number_of_Immigrants,Employment_Rate))
+abline(fit <- lm(Employment_Rate~Number_of_Immigrants, data=df1), col='red')
+legend("topright", bty="n", legend=paste("R2 is", format(summary(fit)$adj.r.squared, digits=4)))
+```
+
+The correlation cofficient (r) is a measure of the strength of the linear relationship between the "Number of New Immigrants" and the "Employment Rate". Value of 'r' ranges from -1.00 to +1.00, and a value of 0 indicates that there is no correlation between these two variables. Therefore, the correlation coefficient (0.04791185) illustrates that there is no correltion between the Number of Immigrants and Employment percentage from 1985 to 2013. In other words, neither an increase nor a decrease in the Number of Immigrants has an impact on the Employment Rate and vice versa.
+
+The coefficient of determination (r^2) measures the strength of the linear equation that predicts the relationship between the Number of Immigrants and Employment Rate. Value of R-sqaured ranges from 0 (poor predictor) to 1 (excellent predictor). Therefore, the coefficient of determination (0.002295545) is not statistically significant.
+
+```{r}
+cor(numOfImm$Num,GDP$GDP)
+cor(numOfImm$Num,GDP$GDP)^2
+```
+# Regressional Analysis between Number of Immigrants and GDP_per_capita
+```{r}
+df2<- data.frame(Number_of_New_Immigrants= numOfImm[,2], GDP_per_capita= GDP[,2])
+with(df2, plot(Number_of_New_Immigrants,GDP_per_capita))
+abline(fit <- lm(GDP_per_capita~Number_of_New_Immigrants, data=df2), col='red')
+legend("topright", bty="n", legend=paste("R2 is", format(summary(fit)$adj.r.squared, digits=4))) #r2=0.01683
+```
+
+The correlation coefficient (0.2433624) indicates that there is a weak, positive correlation between the Number of Immigrans and the GDP per capita from 1985 to 2013. In other words, despite the Americans' perception of the effects of immigrants on the U.S. economy in a recent poll, immigration provides a small net boost to the U.S. economy.
+
+Nevertheless, the coefficient of determination (0.05922526) indicates that there is no direct relations between the Number of Immigrants and GDP per capita and therefore is not staistiscally significant.
+
+
+###Conlcusion:
+All in all, the visualization of data and statistical analysis verify that there is fairly no direct relationship between the Number of New Immigrants and the U.S. GDP per capita and Employment Rate. The argument that immigrants harm the American economy should be dismissed out of hand. The population today includes a far higher percentage (12 percent) of foreign-born Americans than in recent decades, yet the economy is strong, with higher total gross domestic product (GDP), higher GDP per person, higher productivity per worker, and more Americans working than ever before. immigration may not have caused this economic boom, but it is folly to blame immigrants for hurting the economy at a time when the economy is simply not hurting.
